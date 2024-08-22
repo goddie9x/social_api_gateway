@@ -1,0 +1,35 @@
+server:
+  port: 8765
+jwt:
+  token:
+    secret: 19fdd18d9678579f1afe00c382cbd4c6c86f95e973aefed79a85234e5a51364dbf8a28c29cfc42d29e6c1acf4169559ee462a1a274c851eddc58a5c9d30e913b7c9073b8425a32e5c4eba8c6e1aa92cd909ddfbde0dc76ac4387e32317feb8119d46f2690e168aaefa5cedcde1052c84796e765799b7c48b7ef6b0f2088ad48b1be9f0d92cf19f964c7bfe327767f4c1ffe9bd430d99aebed3f8fc178a40ada6c4b0a4ff4d57bce622cb67109216a0d4072aae90e67cc1afcd023cd955dc90bb3dc12c94cd88eaa58e19510604e6c13747137858283176a2a5a9b6af63f646edb1dc88aabfe8aee60289e2cb5e3dde41813deb426b88a5431702ca0fabe0d9af
+spring:
+  application:
+    name: ApiGateway
+  main:
+    web-application-type: reactive
+    allow-bean-definition-overriding: true
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: http://localhost:3000
+          predicates:
+            - Path=/api/v1/users/**
+        - id: friend-service
+          uri: http://localhost:3001
+          predicates:
+            - Path=/api/v1/friends/**
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.reactive.function.client: DEBUG
