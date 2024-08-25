@@ -68,7 +68,8 @@ public class JwtAuthenticationFilter implements WebFilter {
                     return chain.filter(mutatedExchange)
                                 .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context)));
                 }
-            } catch (Exception e) {
+            } 
+            catch (Exception e) {
                 return Mono.error(e);
             }
         }

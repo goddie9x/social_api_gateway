@@ -43,16 +43,12 @@ public class JwtUtil {
         String username = claims.get("username", String.class);
         int role = claims.get("role", Integer.class);
 
-        return new AuthInfo(userId, username, role+"");
+        return new AuthInfo(userId, username, role + "");
     }
 
     public Jws<Claims> getJwsClaimsClaims(String token) {
-        Jws<Claims> jwsClaims = null ;
-        try {
-            jwsClaims= jwtParser.parseSignedClaims(token);
-        } catch (Exception e) {
-            int a = 1;
-        }
+        Jws<Claims> jwsClaims = jwtParser.parseSignedClaims(token);
+
         return jwsClaims;
     }
 
