@@ -13,17 +13,21 @@ spring:
     gateway:
       routes:
         - id: user-service
-          uri: http://localhost:3000
+          uri: lb://user-service
           predicates:
             - Path=/api/v1/users/**
         - id: friend-service
-          uri: http://localhost:3001
+          uri: lb://friend-service
           predicates:
             - Path=/api/v1/friends/**
         - id: notification-service
-          uri: http://localhost:3002
+          uri: lb://notification-service
           predicates:
             - Path=/api/v1/notifications/**
+        - id: blob-service
+          uri: lb://blob-service
+          predicates:
+            - Path=/api/v1/blobs/**
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
@@ -37,3 +41,10 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.web.reactive.function.client: DEBUG
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
