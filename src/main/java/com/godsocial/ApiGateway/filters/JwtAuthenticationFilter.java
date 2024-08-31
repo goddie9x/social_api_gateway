@@ -56,6 +56,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     
                     ServerWebExchange mutatedExchange = exchange.mutate()
                         .request(r -> r.headers(headers -> {
+                            headers.addAll(exchange.getRequest().getHeaders());
                             headers.set("X-Current-User", currentUserJson);
                         }))
                         .build();
