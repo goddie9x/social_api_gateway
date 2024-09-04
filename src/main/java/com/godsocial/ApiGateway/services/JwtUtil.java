@@ -16,8 +16,6 @@ import jakarta.annotation.PostConstruct;
 import io.jsonwebtoken.io.Decoders;
 import java.util.Date;
 
-import com.godsocial.ApiGateway.enums.Role;
-
 @Service
 public class JwtUtil {
     private JwtParser jwtParser;
@@ -38,7 +36,6 @@ public class JwtUtil {
         }
 
         Claims claims = getJwsClaimsClaims(token).getPayload();
-
         String userId = claims.get("userId", String.class);
         String username = claims.get("username", String.class);
         int role = claims.get("role", Integer.class);
@@ -55,6 +52,7 @@ public class JwtUtil {
     public boolean isTokenExpired(String token) {
         Claims claims = getJwsClaimsClaims(token).getPayload();
         Date expiration = claims.getExpiration();
+
         return expiration.before(new Date());
     }
 

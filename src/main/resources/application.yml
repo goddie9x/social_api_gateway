@@ -36,6 +36,9 @@ spring:
             allowedOrigins: "*"
             allowedMethods: "*"
             allowedHeaders: "*"
+      httpclient:
+        connect-timeout: 5000 
+        response-timeout: 30000
 
 logging:
   level:
