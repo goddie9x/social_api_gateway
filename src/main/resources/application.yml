@@ -20,6 +20,10 @@ spring:
           uri: lb://friend-service
           predicates:
             - Path=/api/v1/friends/**
+        - id: message-service
+          uri: lb://message-service
+          predicates:
+            - Path=/api/v1/messages/**
         - id: notification-service
           uri: lb://notification-service
           predicates:

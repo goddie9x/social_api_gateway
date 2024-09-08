@@ -41,7 +41,6 @@ public class JwtAuthenticationFilter implements WebFilter {
         if (EXCLUDED_PATHS.contains(path)) {
             return chain.filter(exchange);
         }
-
         System.out.println("JwtAuthenticationFilter called for path: " + path);
         String authorizationHeader = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
@@ -49,27 +48,26 @@ public class JwtAuthenticationFilter implements WebFilter {
             String token = authorizationHeader.substring(7);
             try {
                 AuthInfo currentUser = jwtUtil.extractAuthInfo(token);
-    
+
                 if (currentUser != null) {
                     ObjectMapper objectMapper = new ObjectMapper();
                     String currentUserJson = objectMapper.writeValueAsString(currentUser);
-    
+
                     ServerWebExchange mutatedExchange = exchange.mutate()
-                        .request(r -> r.headers(headers -> {
-                            headers.set("X-Current-User", currentUserJson);
-                        }))
-                        .build();
-    
+                            .request(r -> r.headers(headers -> {
+                                headers.set("X-Current-User", currentUserJson);
+                            }))
+                            .build();
+
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        currentUser, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + currentUser.getRole()))
-                    );
-    
+                            currentUser, null,
+                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + currentUser.getRole())));
+
                     SecurityContext context = new SecurityContextImpl(authentication);
                     return chain.filter(mutatedExchange)
-                                .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context)));
+                            .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context)));
                 }
-            } 
-            catch (Exception e) {
+            } catch (Exception e) {
                 return Mono.error(e);
             }
         }
