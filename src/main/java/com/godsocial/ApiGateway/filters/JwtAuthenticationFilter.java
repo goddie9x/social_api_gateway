@@ -18,8 +18,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.godsocial.ApiGateway.models.AuthInfo;
 import com.godsocial.ApiGateway.services.JwtUtil;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import reactor.core.publisher.Mono;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
@@ -30,14 +33,13 @@ public class JwtAuthenticationFilter implements WebFilter {
     ObjectMapper objectMapper;
 
     private static final List<String> EXCLUDED_PATHS = List.of(
-        "/api/v1/users/login",
-        "/api/v1/users/register"
-    );
+            "/api/v1/users/login",
+            "/api/v1/users/register");
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-        
+
         if (EXCLUDED_PATHS.contains(path)) {
             return chain.filter(exchange);
         }
@@ -67,11 +69,22 @@ public class JwtAuthenticationFilter implements WebFilter {
                     return chain.filter(mutatedExchange)
                             .contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(context)));
                 }
+            } catch (ExpiredJwtException e) {
+                return handleJwtError(exchange, "JWT token has expired", HttpStatus.UNAUTHORIZED);
             } catch (Exception e) {
                 return Mono.error(e);
             }
         }
 
         return chain.filter(exchange);
+    }
+    private Mono<Void> handleJwtError(ServerWebExchange exchange, String message, HttpStatus status) {
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        
+        String errorResponse = String.format("{\"error\": \"%s\"}", message);
+        
+        return exchange.getResponse().writeWith(Mono.just(exchange.getResponse()
+                .bufferFactory().wrap(errorResponse.getBytes())));
     }
 }
