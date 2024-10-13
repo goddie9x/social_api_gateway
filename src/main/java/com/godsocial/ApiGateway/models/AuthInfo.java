@@ -12,5 +12,5 @@ import lombok.Setter;
 public class AuthInfo {
     private String userId;
     private String username;
-    private String role;
+    private int role;
 }

@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -15,8 +16,10 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.godsocial.ApiGateway.configs.AppConfigProperties;
 import com.godsocial.ApiGateway.models.AuthInfo;
 import com.godsocial.ApiGateway.services.JwtUtil;
+import com.godsocial.ApiGateway.services.RedisService;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import reactor.core.publisher.Mono;
@@ -30,17 +33,14 @@ public class JwtAuthenticationFilter implements WebFilter {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    ObjectMapper objectMapper;
-
-    private static final List<String> EXCLUDED_PATHS = List.of(
-            "/api/v1/users/login",
-            "/api/v1/users/register");
+    private RedisService redisService;
+    @Autowired
+    private AppConfigProperties appConfigProperties;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
-
-        if (EXCLUDED_PATHS.contains(path)) {
+        if (appConfigProperties.getExcludedPaths().contains(path)) {
             return chain.filter(exchange);
         }
         System.out.println("JwtAuthenticationFilter called for path: " + path);
@@ -50,8 +50,8 @@ public class JwtAuthenticationFilter implements WebFilter {
             String token = authorizationHeader.substring(7);
             try {
                 AuthInfo currentUser = jwtUtil.extractAuthInfo(token);
-
-                if (currentUser != null) {
+                String tokenExist = redisService.getValue(currentUser.getUserId());
+                if (tokenExist != null && tokenExist.equals(token) && currentUser != null) {
                     ObjectMapper objectMapper = new ObjectMapper();
                     String currentUserJson = objectMapper.writeValueAsString(currentUser);
 
@@ -78,12 +78,13 @@ public class JwtAuthenticationFilter implements WebFilter {
 
         return chain.filter(exchange);
     }
+
     private Mono<Void> handleJwtError(ServerWebExchange exchange, String message, HttpStatus status) {
         exchange.getResponse().setStatusCode(status);
         exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        
+
         String errorResponse = String.format("{\"error\": \"%s\"}", message);
-        
+
         return exchange.getResponse().writeWith(Mono.just(exchange.getResponse()
                 .bufferFactory().wrap(errorResponse.getBytes())));
     }

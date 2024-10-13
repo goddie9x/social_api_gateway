@@ -32,6 +32,10 @@ spring:
           uri: lb://blob-service
           predicates:
             - Path=/api/v1/blobs/**
+        - id: post-service
+          uri: lb://post-service
+          predicates:
+            - Path=/api/v1/posts/**
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
@@ -43,7 +47,12 @@ spring:
       httpclient:
         connect-timeout: 5000 
         response-timeout: 30000
-
+  data:
+    redis:
+      host: redis
+      port: 6379
+      username: thisIsJustTheUser
+      password: thisIsJustTheTestPassword123
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
@@ -55,3 +64,9 @@ eureka:
       defaultZone: http://discovery-server:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+
+app:
+  excluded-paths:
+    - /api/v1/users/login
+    - /api/v1/users/register
+    - /api/v1/users/refresh-token

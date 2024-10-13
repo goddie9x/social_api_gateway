@@ -40,7 +40,7 @@ public class JwtUtil {
         String username = claims.get("username", String.class);
         int role = claims.get("role", Integer.class);
 
-        return new AuthInfo(userId, username, role + "");
+        return new AuthInfo(userId, username, role);
     }
 
     public Jws<Claims> getJwsClaimsClaims(String token) {

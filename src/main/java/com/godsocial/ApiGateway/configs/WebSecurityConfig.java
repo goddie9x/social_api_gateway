@@ -17,12 +17,13 @@ public class WebSecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
+    @Autowired
+    private AppConfigProperties appConfigProperties;
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
             .authorizeExchange(exchanges -> exchanges
-                .pathMatchers("/api/v1/users/login", "/api/v1/users/register").permitAll() 
+                .pathMatchers(appConfigProperties.getExcludedPaths().toArray(new String[0])).permitAll() 
                 .anyExchange().authenticated() 
             )
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION) 
