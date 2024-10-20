@@ -36,6 +36,22 @@ spring:
           uri: lb://post-service
           predicates:
             - Path=/api/v1/posts/**
+        - id: comment-service
+          uri: lb://comment-service
+          predicates:
+            - Path=/api/v1/comments/**
+        - id: group-service
+          uri: lb://group-service
+          predicates:
+            - Path=/api/v1/groups/**
+        - id: page-service
+          uri: lb://page-service
+          predicates:
+            - Path=/api/v1/pages/**
+        - id: reaction-service
+          uri: lb://reaction-service
+          predicates:
+            - Path=/api/v1/reactions/**
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
       globalcors:
