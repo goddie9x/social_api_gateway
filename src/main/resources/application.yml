@@ -109,6 +109,16 @@ spring:
                 redis-rate-limiter.replenishRate: 100
                 redis-rate-limiter.burstCapacity: 200
                 key-resolver: "#{@ipKeyResolver}"
+        - id: video-service
+          uri: lb://video-service
+          predicates:
+            - Path=/api/v1/videos/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 200
+                key-resolver: "#{@ipKeyResolver}"
         - id: reaction-service
           uri: lb://reaction-service
           predicates:
