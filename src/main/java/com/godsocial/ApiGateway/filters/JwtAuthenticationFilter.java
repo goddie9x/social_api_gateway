@@ -3,6 +3,10 @@ package com.godsocial.ApiGateway.filters;
 import java.util.Collections;
 import java.util.List;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,6 +41,9 @@ public class JwtAuthenticationFilter implements WebFilter {
     @Autowired
     private AppConfigProperties appConfigProperties;
 
+    @Value("${internal.hmac.secret}")
+    private String internalHmacSecret;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
@@ -54,10 +61,12 @@ public class JwtAuthenticationFilter implements WebFilter {
                 if (tokenExist != null && tokenExist.equals(token) && currentUser != null) {
                     ObjectMapper objectMapper = new ObjectMapper();
                     String currentUserJson = objectMapper.writeValueAsString(currentUser);
+                    String signature = hmacSha256(currentUserJson, internalHmacSecret);
 
                     ServerWebExchange mutatedExchange = exchange.mutate()
                             .request(r -> r.headers(headers -> {
                                 headers.set("X-Current-User", currentUserJson);
+                                headers.set("X-Internal-Signature", signature);
                             }))
                             .build();
 
@@ -87,5 +96,20 @@ public class JwtAuthenticationFilter implements WebFilter {
 
         return exchange.getResponse().writeWith(Mono.just(exchange.getResponse()
                 .bufferFactory().wrap(errorResponse.getBytes())));
+    }
+
+    private String hmacSha256(String payload, String secret) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] digest = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(digest.length * 2);
+            for (byte b : digest) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to compute HMAC signature", e);
+        }
     }
 }
